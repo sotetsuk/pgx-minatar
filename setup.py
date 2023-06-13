@@ -6,7 +6,7 @@ long_description = (Path(__file__).parent / "README.md").read_text()
 setup(
     name="pgx-minatar",
     version="0.1.0",
-    description="MinAtar extension of Pgx",
+    description="MinAtar extension for Pgx",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/sotetsuk/pgx-minatar",
