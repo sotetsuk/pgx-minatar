@@ -53,7 +53,7 @@ class State(v1.State):
         scale: Optional[float] = None,
     ) -> str:
         del color_theme, scale
-        from pgx.minatar.utils import visualize_minatar
+        from pgx_minatar.utils import visualize_minatar
 
         return visualize_minatar(self)
 
@@ -64,7 +64,7 @@ class State(v1.State):
         color_theme: Optional[Literal["light", "dark"]] = None,
         scale: Optional[float] = None,
     ) -> None:
-        from pgx.minatar.utils import visualize_minatar
+        from pgx_minatar.utils import visualize_minatar
 
         visualize_minatar(self, filename)
 
