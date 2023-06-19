@@ -2,6 +2,7 @@
 
 
 install-dev:
+	git submodule update --init
 	python3 -m pip install \
 		pytest==7.1.2 \
 		matplotlib \

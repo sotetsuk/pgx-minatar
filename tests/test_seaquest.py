@@ -1,12 +1,14 @@
+import pickle
 import random
 import jax
+import jax.numpy as jnp
 from dataclasses import fields
 
 from minatar import Environment
 
-from pgx.minatar import seaquest
+from pgx_minatar import seaquest
 
-from .minatar_utils import *
+from minatar_utils import *
 
 state_keys = {
     "oxygen",
@@ -32,6 +34,20 @@ state_keys = {
 
 _step_det = jax.jit(seaquest._step_det)
 observe = jax.jit(seaquest._observe)
+
+
+def test_buggy_example():
+    env = seaquest.MinAtarSeaquest()
+
+    with open("prev_state.pkl", 'rb') as f:
+        s = pickle.load(f)
+    with open("expected_obs.pkl", 'rb') as f:
+        expected_obs = pickle.load(f)
+
+    s = jax.jit(env.step)(s, jnp.int32(5))
+    s.save_svg("next_pgx.svg")
+    print(s)
+    assert (s.observation == expected_obs).all()
 
 
 def test_step_det():
