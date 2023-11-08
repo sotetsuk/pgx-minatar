@@ -108,7 +108,7 @@ class MinAtarAsterix(core.Env):
             self.minimal_action_set[action],
             action,
         )
-        return _step(state, action, self.sticky_action_prob, key)  # type: ignore
+        return _step(state, action, key, self.sticky_action_prob)  # type: ignore
 
     def _observe(self, state: core.State, player_id: jnp.ndarray) -> jnp.ndarray:
         assert isinstance(state, State)
@@ -130,8 +130,8 @@ class MinAtarAsterix(core.Env):
 def _step(
     state: State,
     action: jnp.ndarray,
-    sticky_action_prob: float,
-    key
+    key,
+    sticky_action_prob,
 ):
     action = jnp.int32(action)
     rng0, rng1, rng2, rng3 = jax.random.split(key, 4)
