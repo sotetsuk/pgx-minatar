@@ -14,7 +14,7 @@ from jax import numpy as jnp
 
 import pgx.core as core
 from pgx._src.struct import dataclass
-from pgx._src.types import Array
+from pgx._src.types import Array, PRNGKey
 
 RAMP_INTERVAL: Array = jnp.int32(100)
 MAX_OXYGEN: Array = jnp.int32(200)

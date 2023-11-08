@@ -13,7 +13,7 @@ from jax import numpy as jnp
 
 import pgx.core as core
 from pgx._src.struct import dataclass
-from pgx._src.types import Array
+from pgx._src.types import Array, PRNGKey
 
 ramp_interval: Array = jnp.array(100, dtype=jnp.int32)
 init_spawn_speed: Array = jnp.array(10, dtype=jnp.int32)
