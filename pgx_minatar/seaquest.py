@@ -14,7 +14,7 @@ from jax import numpy as jnp
 
 import pgx.core as core
 from pgx._src.struct import dataclass
-from pgx._src.types import Array
+from pgx._src.types import Array, PRNGKey
 
 RAMP_INTERVAL: Array = jnp.int32(100)
 MAX_OXYGEN: Array = jnp.int32(200)
@@ -109,7 +109,7 @@ class MinAtarSeaquest(core.Env):
                 self.minimal_action_set.shape[0], dtype=jnp.bool_
             )
 
-    def _init(self, key: jax.random.KeyArray) -> State:
+    def _init(self, key: PRNGKey) -> State:
         state = State()
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         return state

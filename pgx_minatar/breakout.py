@@ -13,7 +13,7 @@ from jax import numpy as jnp
 
 import pgx.core as core
 from pgx._src.struct import dataclass
-from pgx._src.types import Array
+from pgx._src.types import Array, PRNGKey
 
 FALSE = jnp.bool_(False)
 TRUE = jnp.bool_(True)
@@ -92,7 +92,7 @@ class MinAtarBreakout(core.Env):
                 self.minimal_action_set.shape[0], dtype=jnp.bool_
             )
 
-    def _init(self, key: jax.random.KeyArray) -> State:
+    def _init(self, key: PRNGKey) -> State:
         state = _init(rng=key)  # type: ignore
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         return state  # type: ignore

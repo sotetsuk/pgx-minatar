@@ -13,7 +13,7 @@ from jax import numpy as jnp
 
 import pgx.core as core
 from pgx._src.struct import dataclass
-from pgx._src.types import Array
+from pgx._src.types import Array, PRNGKey
 
 ramp_interval: Array = jnp.array(100, dtype=jnp.int32)
 init_spawn_speed: Array = jnp.array(10, dtype=jnp.int32)
@@ -97,7 +97,7 @@ class MinAtarAsterix(core.Env):
                 self.minimal_action_set.shape[0], dtype=jnp.bool_
             )
 
-    def _init(self, key: jax.random.KeyArray) -> State:
+    def _init(self, key: PRNGKey) -> State:
         state = State()
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         return state  # type: ignore
