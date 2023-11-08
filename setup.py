@@ -5,7 +5,7 @@ long_description = (Path(__file__).parent / "README.md").read_text()
 
 setup(
     name="pgx-minatar",
-    version="0.2.1",
+    version="0.3.0",
     description="MinAtar extension for Pgx",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -18,14 +18,12 @@ setup(
         "": ["LICENSE"]
     },
     include_package_data=True,
-    install_requires=[
-        "jax>=0.3.25",  # JAX version on Colab (TPU)
-        "typing_extensions",
-        "pgx",
-    ],
+    install_requires=[],
     classifiers=[
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
 )

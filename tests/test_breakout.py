@@ -3,9 +3,9 @@ import jax
 
 from minatar import Environment
 
-from pgx.minatar import breakout
+from pgx_minatar import breakout
 
-from .minatar_utils import *
+from tests.minatar_utils import *
 
 state_keys = {
     "ball_y",
@@ -90,11 +90,11 @@ def test_minimal_action_set():
     assert env.num_actions == 3
     state = jax.jit(env.init)(jax.random.PRNGKey(0))
     assert state.legal_action_mask.shape == (3,)
-    state = jax.jit(env.step)(state, 0)
+    state = jax.jit(env.step)(state, 0, jax.random.PRNGKey(0))
     assert state.legal_action_mask.shape == (3,)
 
 
 def test_api():
     import pgx
     env = pgx.make("minatar-breakout")
-    pgx.v1_api_test(env, 10)
+    pgx.api_test(env, 10, True)

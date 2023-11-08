@@ -12,7 +12,7 @@ import jax
 import jax.lax as lax
 from jax import numpy as jnp
 
-import pgx.v1 as v1
+import pgx.core as core
 from pgx._src.struct import dataclass
 
 RAMP_INTERVAL: jnp.ndarray = jnp.int32(100)
@@ -33,7 +33,7 @@ FALSE: jnp.ndarray = jnp.bool_(False)
 
 
 @dataclass
-class State(v1.State):
+class State(core.State):
     current_player: jnp.ndarray = jnp.int32(0)
     observation: jnp.ndarray = jnp.zeros((10, 10, 10), dtype=jnp.bool_)
     rewards: jnp.ndarray = jnp.zeros(1, dtype=jnp.float32)  # (1,)
@@ -66,7 +66,7 @@ class State(v1.State):
     _last_action: jnp.ndarray = ZERO
 
     @property
-    def env_id(self) -> v1.EnvId:
+    def env_id(self) -> core.EnvId:
         return "minatar-seaquest"
 
     def to_svg(
@@ -92,7 +92,7 @@ class State(v1.State):
         visualize_minatar(self, filename)
 
 
-class MinAtarSeaquest(v1.Env):
+class MinAtarSeaquest(core.Env):
     def __init__(
         self,
         *,
@@ -114,7 +114,7 @@ class MinAtarSeaquest(v1.Env):
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         return state
 
-    def _step(self, state: v1.State, action) -> State:
+    def _step(self, state: core.State, action, key) -> State:
         assert isinstance(state, State)
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         action = jax.lax.select(
@@ -122,19 +122,19 @@ class MinAtarSeaquest(v1.Env):
             self.minimal_action_set[action],
             action,
         )
-        return _step(state, action, sticky_action_prob=self.sticky_action_prob)  # type: ignore
+        return _step(state, action, key, self.sticky_action_prob)  # type: ignore
 
-    def _observe(self, state: v1.State, player_id: jnp.ndarray) -> jnp.ndarray:
+    def _observe(self, state: core.State, player_id: jnp.ndarray) -> jnp.ndarray:
         assert isinstance(state, State)
         return _observe(state)
 
     @property
-    def id(self) -> v1.EnvId:
+    def id(self) -> core.EnvId:
         return "minatar-seaquest"
 
     @property
     def version(self) -> str:
-        return "v0"
+        return "v1"
 
     @property
     def num_players(self):
@@ -144,11 +144,10 @@ class MinAtarSeaquest(v1.Env):
 def _step(
     state: State,
     action: jnp.ndarray,
+    key,
     sticky_action_prob,
 ):
-    key, subkey = jax.random.split(state._rng_key)
-    state = state.replace(_rng_key=key)  # type: ignore
-    rngs = jax.random.split(subkey, 6)
+    rngs = jax.random.split(key, 6)
     action = jnp.int32(action)
     # sticky action
     action = jax.lax.cond(
