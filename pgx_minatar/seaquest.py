@@ -41,7 +41,6 @@ class State(core.State):
     terminated: Array = FALSE
     truncated: Array = FALSE
     legal_action_mask: Array = jnp.ones(6, dtype=jnp.bool_)
-    _rng_key: jax.random.KeyArray = PRNGKey(0)
     _step_count: Array = jnp.int32(0)
     # --- MinAtar Seaquest specific ---
     _oxygen: Array = MAX_OXYGEN
