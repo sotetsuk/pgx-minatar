@@ -11,7 +11,7 @@ from typing import Literal, Optional
 import jax
 from jax import numpy as jnp
 
-import pgx.v1 as v1
+import pgx.core as core
 from pgx._src.struct import dataclass
 
 player_speed = jnp.array(3, dtype=jnp.int32)
@@ -25,14 +25,13 @@ NINE = jnp.array(9, dtype=jnp.int32)
 
 
 @dataclass
-class State(v1.State):
+class State(core.State):
     current_player: jnp.ndarray = jnp.int32(0)
     observation: jnp.ndarray = jnp.zeros((10, 10, 7), dtype=jnp.bool_)
     rewards: jnp.ndarray = jnp.zeros(1, dtype=jnp.float32)  # (1,)
     terminated: jnp.ndarray = FALSE
     truncated: jnp.ndarray = FALSE
     legal_action_mask: jnp.ndarray = jnp.ones(3, dtype=jnp.bool_)
-    _rng_key: jax.random.KeyArray = jax.random.PRNGKey(0)
     _step_count: jnp.ndarray = jnp.int32(0)
     # --- MinAtar Freeway specific ---
     _cars: jnp.ndarray = jnp.zeros((8, 4), dtype=jnp.int32)
@@ -43,7 +42,7 @@ class State(v1.State):
     _last_action: jnp.ndarray = jnp.array(0, dtype=jnp.int32)
 
     @property
-    def env_id(self) -> v1.EnvId:
+    def env_id(self) -> core.EnvId:
         return "minatar-freeway"
 
     def to_svg(
@@ -69,7 +68,7 @@ class State(v1.State):
         visualize_minatar(self, filename)
 
 
-class MinAtarFreeway(v1.Env):
+class MinAtarFreeway(core.Env):
     def __init__(
         self,
         *,
@@ -91,7 +90,7 @@ class MinAtarFreeway(v1.Env):
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         return state  # type: ignore
 
-    def _step(self, state: v1.State, action) -> State:
+    def _step(self, state: core.State, action, key) -> State:
         assert isinstance(state, State)
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         action = jax.lax.select(
@@ -99,14 +98,14 @@ class MinAtarFreeway(v1.Env):
             self.minimal_action_set[action],
             action,
         )
-        return _step(state, action, sticky_action_prob=self.sticky_action_prob)  # type: ignore
+        return _step(state, action, key, self.sticky_action_prob)  # type: ignore
 
-    def _observe(self, state: v1.State, player_id: jnp.ndarray) -> jnp.ndarray:
+    def _observe(self, state: core.State, player_id: jnp.ndarray) -> jnp.ndarray:
         assert isinstance(state, State)
         return _observe(state)
 
     @property
-    def id(self) -> v1.EnvId:
+    def id(self) -> core.EnvId:
         return "minatar-freeway"
 
     @property
@@ -121,17 +120,17 @@ class MinAtarFreeway(v1.Env):
 def _step(
     state: State,
     action: jnp.ndarray,
+    key,
     sticky_action_prob,
 ):
     action = jnp.int32(action)
-    key, subkey0, subkey1 = jax.random.split(state._rng_key, 3)
-    state = state.replace(_rng_key=key)  # type: ignore
+    key0, key1 = jax.random.split(key, 2)
     action = jax.lax.cond(
-        jax.random.uniform(subkey0) < sticky_action_prob,
+        jax.random.uniform(key0) < sticky_action_prob,
         lambda: state._last_action,
         lambda: action,
     )
-    speeds, directions = _random_speed_directions(subkey1)
+    speeds, directions = _random_speed_directions(key1)
     return _step_det(state, action, speeds=speeds, directions=directions)
 
 
