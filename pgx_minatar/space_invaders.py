@@ -14,6 +14,7 @@ from jax import numpy as jnp
 
 import pgx.core as core
 from pgx._src.struct import dataclass
+from pgx._src.types import Array
 
 FALSE = jnp.bool_(False)
 TRUE = jnp.bool_(True)
@@ -28,28 +29,28 @@ NINE = jnp.int32(9)
 
 @dataclass
 class State(core.State):
-    current_player: jnp.ndarray = jnp.int32(0)
-    observation: jnp.ndarray = jnp.zeros((10, 10, 6), dtype=jnp.bool_)
-    rewards: jnp.ndarray = jnp.zeros(1, dtype=jnp.float32)  # (1,)
-    terminated: jnp.ndarray = FALSE
-    truncated: jnp.ndarray = FALSE
-    legal_action_mask: jnp.ndarray = jnp.ones(4, dtype=jnp.bool_)
-    _step_count: jnp.ndarray = jnp.int32(0)
+    current_player: Array = jnp.int32(0)
+    observation: Array = jnp.zeros((10, 10, 6), dtype=jnp.bool_)
+    rewards: Array = jnp.zeros(1, dtype=jnp.float32)  # (1,)
+    terminated: Array = FALSE
+    truncated: Array = FALSE
+    legal_action_mask: Array = jnp.ones(4, dtype=jnp.bool_)
+    _step_count: Array = jnp.int32(0)
     # --- MinAtar SpaceInvaders specific ---
-    _pos: jnp.ndarray = jnp.int32(5)
-    _f_bullet_map: jnp.ndarray = jnp.zeros((10, 10), dtype=jnp.bool_)
-    _e_bullet_map: jnp.ndarray = jnp.zeros((10, 10), dtype=jnp.bool_)
-    _alien_map: jnp.ndarray = (
+    _pos: Array = jnp.int32(5)
+    _f_bullet_map: Array = jnp.zeros((10, 10), dtype=jnp.bool_)
+    _e_bullet_map: Array = jnp.zeros((10, 10), dtype=jnp.bool_)
+    _alien_map: Array = (
         jnp.zeros((10, 10), dtype=jnp.bool_).at[0:4, 2:8].set(TRUE)
     )
-    _alien_dir: jnp.ndarray = jnp.int32(-1)
-    _enemy_move_interval: jnp.ndarray = ENEMY_MOVE_INTERVAL
-    _alien_move_timer: jnp.ndarray = ENEMY_MOVE_INTERVAL
-    _alien_shot_timer: jnp.ndarray = ENEMY_SHOT_INTERVAL
-    _ramp_index: jnp.ndarray = jnp.int32(0)
-    _shot_timer: jnp.ndarray = jnp.int32(0)
-    _terminal: jnp.ndarray = FALSE
-    _last_action: jnp.ndarray = jnp.int32(0)
+    _alien_dir: Array = jnp.int32(-1)
+    _enemy_move_interval: Array = ENEMY_MOVE_INTERVAL
+    _alien_move_timer: Array = ENEMY_MOVE_INTERVAL
+    _alien_shot_timer: Array = ENEMY_SHOT_INTERVAL
+    _ramp_index: Array = jnp.int32(0)
+    _shot_timer: Array = jnp.int32(0)
+    _terminal: Array = FALSE
+    _last_action: Array = jnp.int32(0)
 
     @property
     def env_id(self) -> core.EnvId:
@@ -109,7 +110,7 @@ class MinAtarSpaceInvaders(core.Env):
         )
         return _step(state, action, key, self.sticky_action_prob)  # type: ignore
 
-    def _observe(self, state: core.State, player_id: jnp.ndarray) -> jnp.ndarray:
+    def _observe(self, state: core.State, player_id: Array) -> Array:
         assert isinstance(state, State)
         return _observe(state)
 
@@ -128,7 +129,7 @@ class MinAtarSpaceInvaders(core.Env):
 
 def _step(
     state: State,
-    action: jnp.ndarray,
+    action: Array,
     key,
     sticky_action_prob,
 ):
@@ -141,7 +142,7 @@ def _step(
     return _step_det(state, action)
 
 
-def _observe(state: State) -> jnp.ndarray:
+def _observe(state: State) -> Array:
     obs = jnp.zeros((10, 10, 6), dtype=jnp.bool_)
     obs = obs.at[9, state._pos, 0].set(TRUE)
     obs = obs.at[:, :, 1].set(state._alien_map)
@@ -166,7 +167,7 @@ def _observe(state: State) -> jnp.ndarray:
 
 def _step_det(
     state: State,
-    action: jnp.ndarray,
+    action: Array,
 ):
     r = jnp.float32(0)
 

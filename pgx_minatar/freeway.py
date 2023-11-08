@@ -13,6 +13,7 @@ from jax import numpy as jnp
 
 import pgx.core as core
 from pgx._src.struct import dataclass
+from pgx._src.types import Array
 
 player_speed = jnp.array(3, dtype=jnp.int32)
 time_limit = jnp.array(2500, dtype=jnp.int32)
@@ -26,20 +27,20 @@ NINE = jnp.array(9, dtype=jnp.int32)
 
 @dataclass
 class State(core.State):
-    current_player: jnp.ndarray = jnp.int32(0)
-    observation: jnp.ndarray = jnp.zeros((10, 10, 7), dtype=jnp.bool_)
-    rewards: jnp.ndarray = jnp.zeros(1, dtype=jnp.float32)  # (1,)
-    terminated: jnp.ndarray = FALSE
-    truncated: jnp.ndarray = FALSE
-    legal_action_mask: jnp.ndarray = jnp.ones(3, dtype=jnp.bool_)
-    _step_count: jnp.ndarray = jnp.int32(0)
+    current_player: Array = jnp.int32(0)
+    observation: Array = jnp.zeros((10, 10, 7), dtype=jnp.bool_)
+    rewards: Array = jnp.zeros(1, dtype=jnp.float32)  # (1,)
+    terminated: Array = FALSE
+    truncated: Array = FALSE
+    legal_action_mask: Array = jnp.ones(3, dtype=jnp.bool_)
+    _step_count: Array = jnp.int32(0)
     # --- MinAtar Freeway specific ---
-    _cars: jnp.ndarray = jnp.zeros((8, 4), dtype=jnp.int32)
-    _pos: jnp.ndarray = jnp.array(9, dtype=jnp.int32)
-    _move_timer: jnp.ndarray = jnp.array(player_speed, dtype=jnp.int32)
-    _terminate_timer: jnp.ndarray = jnp.array(time_limit, dtype=jnp.int32)
-    _terminal: jnp.ndarray = jnp.array(False, dtype=jnp.bool_)
-    _last_action: jnp.ndarray = jnp.array(0, dtype=jnp.int32)
+    _cars: Array = jnp.zeros((8, 4), dtype=jnp.int32)
+    _pos: Array = jnp.array(9, dtype=jnp.int32)
+    _move_timer: Array = jnp.array(player_speed, dtype=jnp.int32)
+    _terminate_timer: Array = jnp.array(time_limit, dtype=jnp.int32)
+    _terminal: Array = jnp.array(False, dtype=jnp.bool_)
+    _last_action: Array = jnp.array(0, dtype=jnp.int32)
 
     @property
     def env_id(self) -> core.EnvId:
@@ -100,7 +101,7 @@ class MinAtarFreeway(core.Env):
         )
         return _step(state, action, key, self.sticky_action_prob)  # type: ignore
 
-    def _observe(self, state: core.State, player_id: jnp.ndarray) -> jnp.ndarray:
+    def _observe(self, state: core.State, player_id: Array) -> Array:
         assert isinstance(state, State)
         return _observe(state)
 
@@ -119,7 +120,7 @@ class MinAtarFreeway(core.Env):
 
 def _step(
     state: State,
-    action: jnp.ndarray,
+    action: Array,
     key,
     sticky_action_prob,
 ):
@@ -134,16 +135,16 @@ def _step(
     return _step_det(state, action, speeds=speeds, directions=directions)
 
 
-def _init(rng: jnp.ndarray) -> State:
+def _init(rng: Array) -> State:
     speeds, directions = _random_speed_directions(rng)
     return _init_det(speeds=speeds, directions=directions)
 
 
 def _step_det(
     state: State,
-    action: jnp.ndarray,
-    speeds: jnp.ndarray,
-    directions: jnp.ndarray,
+    action: Array,
+    speeds: Array,
+    directions: Array,
 ):
     cars = state._cars
     pos = state._pos
@@ -228,18 +229,18 @@ def _update_cars(pos, cars):
     return pos, cars
 
 
-def _init_det(speeds: jnp.ndarray, directions: jnp.ndarray) -> State:
+def _init_det(speeds: Array, directions: Array) -> State:
     cars = _randomize_cars(speeds, directions, initialize=True)
     return State(_cars=cars)  # type: ignore
 
 
 def _randomize_cars(
-    speeds: jnp.ndarray,
-    directions: jnp.ndarray,
-    cars: jnp.ndarray = jnp.zeros((8, 4), dtype=int),
+    speeds: Array,
+    directions: Array,
+    cars: Array = jnp.zeros((8, 4), dtype=int),
     initialize: bool = False,
-) -> jnp.ndarray:
-    assert isinstance(cars, jnp.ndarray), cars
+) -> Array:
+    assert isinstance(cars, Array), cars
     speeds *= directions
 
     def _init(_cars):
@@ -265,7 +266,7 @@ def _random_speed_directions(rng):
     return speeds, directions
 
 
-def _observe(state: State) -> jnp.ndarray:
+def _observe(state: State) -> Array:
     obs = jnp.zeros((10, 10, 7), dtype=jnp.bool_)
     obs = obs.at[state._pos, 4, 0].set(TRUE)
 

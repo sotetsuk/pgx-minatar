@@ -13,6 +13,7 @@ from jax import numpy as jnp
 
 import pgx.core as core
 from pgx._src.struct import dataclass
+from pgx._src.types import Array
 
 FALSE = jnp.bool_(False)
 TRUE = jnp.bool_(True)
@@ -26,26 +27,26 @@ NINE = jnp.array(9, dtype=jnp.int32)
 
 @dataclass
 class State(core.State):
-    current_player: jnp.ndarray = jnp.int32(0)
-    observation: jnp.ndarray = jnp.zeros((10, 10, 4), dtype=jnp.bool_)
-    rewards: jnp.ndarray = jnp.zeros(1, dtype=jnp.float32)  # (1,)
-    terminated: jnp.ndarray = FALSE
-    truncated: jnp.ndarray = FALSE
-    legal_action_mask: jnp.ndarray = jnp.ones(3, dtype=jnp.bool_)
-    _step_count: jnp.ndarray = jnp.int32(0)
+    current_player: Array = jnp.int32(0)
+    observation: Array = jnp.zeros((10, 10, 4), dtype=jnp.bool_)
+    rewards: Array = jnp.zeros(1, dtype=jnp.float32)  # (1,)
+    terminated: Array = FALSE
+    truncated: Array = FALSE
+    legal_action_mask: Array = jnp.ones(3, dtype=jnp.bool_)
+    _step_count: Array = jnp.int32(0)
     # --- MinAtar Breakout specific ---
-    _ball_y: jnp.ndarray = THREE
-    _ball_x: jnp.ndarray = ZERO
-    _ball_dir: jnp.ndarray = TWO
-    _pos: jnp.ndarray = FOUR
-    _brick_map: jnp.ndarray = (
+    _ball_y: Array = THREE
+    _ball_x: Array = ZERO
+    _ball_dir: Array = TWO
+    _pos: Array = FOUR
+    _brick_map: Array = (
         jnp.zeros((10, 10), dtype=jnp.bool_).at[1:4, :].set(True)
     )
-    _strike: jnp.ndarray = jnp.array(False, dtype=jnp.bool_)
-    _last_x: jnp.ndarray = ZERO
-    _last_y: jnp.ndarray = THREE
-    _terminal: jnp.ndarray = jnp.array(False, dtype=jnp.bool_)
-    _last_action: jnp.ndarray = ZERO
+    _strike: Array = jnp.array(False, dtype=jnp.bool_)
+    _last_x: Array = ZERO
+    _last_y: Array = THREE
+    _terminal: Array = jnp.array(False, dtype=jnp.bool_)
+    _last_action: Array = ZERO
 
     @property
     def env_id(self) -> core.EnvId:
@@ -105,7 +106,7 @@ class MinAtarBreakout(core.Env):
         )
         return _step(state, action, key, self.sticky_action_prob)  # type: ignore
 
-    def _observe(self, state: core.State, player_id: jnp.ndarray) -> jnp.ndarray:
+    def _observe(self, state: core.State, player_id: Array) -> Array:
         assert isinstance(state, State)
         return _observe(state)
 
@@ -137,12 +138,12 @@ def _step(
     return _step_det(state, action)
 
 
-def _init(rng: jnp.ndarray) -> State:
+def _init(rng: Array) -> State:
     ball_start = jax.random.choice(rng, 2)
     return _init_det(ball_start=ball_start)
 
 
-def _step_det(state: State, action: jnp.ndarray):
+def _step_det(state: State, action: Array):
     ball_y = state._ball_y
     ball_x = state._ball_x
     ball_dir = state._ball_dir
@@ -280,7 +281,7 @@ def _update_by_bottom(
     return brick_map, new_y, ball_dir, terminal
 
 
-def _init_det(ball_start: jnp.ndarray) -> State:
+def _init_det(ball_start: Array) -> State:
     ball_x, ball_dir = jax.lax.switch(
         ball_start,
         [lambda: (ZERO, TWO), lambda: (NINE, THREE)],
@@ -291,7 +292,7 @@ def _init_det(ball_start: jnp.ndarray) -> State:
     )  # type: ignore
 
 
-def _observe(state: State) -> jnp.ndarray:
+def _observe(state: State) -> Array:
     obs = jnp.zeros((10, 10, 4), dtype=jnp.bool_)
     obs = obs.at[state._ball_y, state._ball_x, 1].set(True)
     obs = obs.at[9, state._pos, 0].set(True)
