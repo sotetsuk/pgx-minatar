@@ -240,7 +240,6 @@ def _randomize_cars(
     cars: Array = jnp.zeros((8, 4), dtype=int),
     initialize: bool = False,
 ) -> Array:
-    assert isinstance(cars, Array), cars
     speeds *= directions
 
     def _init(_cars):
