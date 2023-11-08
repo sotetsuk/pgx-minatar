@@ -11,8 +11,7 @@ from typing import Literal, Optional
 import jax
 from jax import numpy as jnp
 
-import pgx.core as core
-from pgx._src.struct import dataclass
+import pgx.core as core from pgx._src.struct import dataclass
 from pgx._src.types import Array
 
 player_speed = jnp.array(3, dtype=jnp.int32)
@@ -240,7 +239,6 @@ def _randomize_cars(
     cars: Array = jnp.zeros((8, 4), dtype=int),
     initialize: bool = False,
 ) -> Array:
-    assert isinstance(cars, Array), cars
     speeds *= directions
 
     def _init(_cars):
