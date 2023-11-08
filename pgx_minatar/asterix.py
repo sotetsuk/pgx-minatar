@@ -13,12 +13,13 @@ from jax import numpy as jnp
 
 import pgx.core as core
 from pgx._src.struct import dataclass
+from pgx._src.types import Array
 
-ramp_interval: jnp.ndarray = jnp.array(100, dtype=jnp.int32)
-init_spawn_speed: jnp.ndarray = jnp.array(10, dtype=jnp.int32)
-init_move_interval: jnp.ndarray = jnp.array(5, dtype=jnp.int32)
-shot_cool_down: jnp.ndarray = jnp.array(5, dtype=jnp.int32)
-INF: jnp.ndarray = jnp.array(99, dtype=jnp.int32)
+ramp_interval: Array = jnp.array(100, dtype=jnp.int32)
+init_spawn_speed: Array = jnp.array(10, dtype=jnp.int32)
+init_move_interval: Array = jnp.array(5, dtype=jnp.int32)
+shot_cool_down: Array = jnp.array(5, dtype=jnp.int32)
+INF: Array = jnp.array(99, dtype=jnp.int32)
 
 ZERO = jnp.array(0, dtype=jnp.int32)
 ONE = jnp.array(1, dtype=jnp.int32)
@@ -31,26 +32,26 @@ TRUE = jnp.bool_(True)
 
 @dataclass
 class State(core.State):
-    current_player: jnp.ndarray = jnp.int32(0)
-    observation: jnp.ndarray = jnp.zeros((10, 10, 4), dtype=jnp.bool_)
-    rewards: jnp.ndarray = jnp.zeros(1, dtype=jnp.float32)  # (1,)
-    terminated: jnp.ndarray = FALSE
-    truncated: jnp.ndarray = FALSE
-    legal_action_mask: jnp.ndarray = jnp.ones(5, dtype=jnp.bool_)
-    _step_count: jnp.ndarray = jnp.int32(0)
+    current_player: Array = jnp.int32(0)
+    observation: Array = jnp.zeros((10, 10, 4), dtype=jnp.bool_)
+    rewards: Array = jnp.zeros(1, dtype=jnp.float32)  # (1,)
+    terminated: Array = FALSE
+    truncated: Array = FALSE
+    legal_action_mask: Array = jnp.ones(5, dtype=jnp.bool_)
+    _step_count: Array = jnp.int32(0)
     # --- MinAtar Asterix specific ---
-    _player_x: jnp.ndarray = jnp.array(5, dtype=jnp.int32)
-    _player_y: jnp.ndarray = jnp.array(5, dtype=jnp.int32)
-    _entities: jnp.ndarray = jnp.ones((8, 4), dtype=jnp.int32) * INF
-    _shot_timer: jnp.ndarray = jnp.ones(0, dtype=jnp.int32)
-    _spawn_speed: jnp.ndarray = init_spawn_speed
-    _spawn_timer: jnp.ndarray = init_spawn_speed
-    _move_speed: jnp.ndarray = init_move_interval
-    _move_timer: jnp.ndarray = init_move_interval
-    _ramp_timer: jnp.ndarray = ramp_interval
-    _ramp_index: jnp.ndarray = jnp.array(0, dtype=jnp.int32)
-    _terminal: jnp.ndarray = FALSE  # duplicated but necessary for checking the consistency to the original MinAtar
-    _last_action: jnp.ndarray = jnp.array(0, dtype=jnp.int32)
+    _player_x: Array = jnp.array(5, dtype=jnp.int32)
+    _player_y: Array = jnp.array(5, dtype=jnp.int32)
+    _entities: Array = jnp.ones((8, 4), dtype=jnp.int32) * INF
+    _shot_timer: Array = jnp.ones(0, dtype=jnp.int32)
+    _spawn_speed: Array = init_spawn_speed
+    _spawn_timer: Array = init_spawn_speed
+    _move_speed: Array = init_move_interval
+    _move_timer: Array = init_move_interval
+    _ramp_timer: Array = ramp_interval
+    _ramp_index: Array = jnp.array(0, dtype=jnp.int32)
+    _terminal: Array = FALSE  # duplicated but necessary for checking the consistency to the original MinAtar
+    _last_action: Array = jnp.array(0, dtype=jnp.int32)
 
     @property
     def env_id(self) -> core.EnvId:
@@ -110,7 +111,7 @@ class MinAtarAsterix(core.Env):
         )
         return _step(state, action, key, self.sticky_action_prob)  # type: ignore
 
-    def _observe(self, state: core.State, player_id: jnp.ndarray) -> jnp.ndarray:
+    def _observe(self, state: core.State, player_id: Array) -> Array:
         assert isinstance(state, State)
         return _observe(state)
 
@@ -129,7 +130,7 @@ class MinAtarAsterix(core.Env):
 
 def _step(
     state: State,
-    action: jnp.ndarray,
+    action: Array,
     key,
     sticky_action_prob,
 ):
@@ -174,7 +175,7 @@ def _step(
 
 def _step_det(
     state: State,
-    action: jnp.ndarray,
+    action: Array,
     lr,
     is_gold,
     slot,
@@ -373,7 +374,7 @@ def __update_ramp(spawn_speed, move_speed, ramp_index):
     return spawn_speed, move_speed, ramp_timer, ramp_index
 
 
-def _observe(state: State) -> jnp.ndarray:
+def _observe(state: State) -> Array:
     obs = jnp.zeros((10, 10, 4), dtype=jnp.bool_)
     obs = obs.at[state._player_y, state._player_x, 0].set(True)
     obs = jax.lax.fori_loop(

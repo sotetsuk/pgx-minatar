@@ -14,56 +14,57 @@ from jax import numpy as jnp
 
 import pgx.core as core
 from pgx._src.struct import dataclass
+from pgx._src.types import Array
 
-RAMP_INTERVAL: jnp.ndarray = jnp.int32(100)
-MAX_OXYGEN: jnp.ndarray = jnp.int32(200)
-INIT_SPAWN_SPEED: jnp.ndarray = jnp.int32(20)
-DIVER_SPAWN_SPEED: jnp.ndarray = jnp.int32(30)
-INIT_MOVE_INTERVAL: jnp.ndarray = jnp.int32(5)
-SHOT_COOL_DOWN: jnp.ndarray = jnp.int32(5)
-ENEMY_SHOT_INTERVAL: jnp.ndarray = jnp.int32(10)
-ENEMY_MOVE_INTERVAL: jnp.ndarray = jnp.int32(5)
-DIVER_MOVE_INTERVAL: jnp.ndarray = jnp.int32(5)
+RAMP_INTERVAL: Array = jnp.int32(100)
+MAX_OXYGEN: Array = jnp.int32(200)
+INIT_SPAWN_SPEED: Array = jnp.int32(20)
+DIVER_SPAWN_SPEED: Array = jnp.int32(30)
+INIT_MOVE_INTERVAL: Array = jnp.int32(5)
+SHOT_COOL_DOWN: Array = jnp.int32(5)
+ENEMY_SHOT_INTERVAL: Array = jnp.int32(10)
+ENEMY_MOVE_INTERVAL: Array = jnp.int32(5)
+DIVER_MOVE_INTERVAL: Array = jnp.int32(5)
 
 
-ZERO: jnp.ndarray = jnp.int32(0)
-NINE: jnp.ndarray = jnp.int32(9)
-TRUE: jnp.ndarray = jnp.bool_(True)
-FALSE: jnp.ndarray = jnp.bool_(False)
+ZERO: Array = jnp.int32(0)
+NINE: Array = jnp.int32(9)
+TRUE: Array = jnp.bool_(True)
+FALSE: Array = jnp.bool_(False)
 
 
 @dataclass
 class State(core.State):
-    current_player: jnp.ndarray = jnp.int32(0)
-    observation: jnp.ndarray = jnp.zeros((10, 10, 10), dtype=jnp.bool_)
-    rewards: jnp.ndarray = jnp.zeros(1, dtype=jnp.float32)  # (1,)
-    terminated: jnp.ndarray = FALSE
-    truncated: jnp.ndarray = FALSE
-    legal_action_mask: jnp.ndarray = jnp.ones(6, dtype=jnp.bool_)
-    _rng_key: jax.random.KeyArray = jax.random.PRNGKey(0)
-    _step_count: jnp.ndarray = jnp.int32(0)
+    current_player: Array = jnp.int32(0)
+    observation: Array = jnp.zeros((10, 10, 10), dtype=jnp.bool_)
+    rewards: Array = jnp.zeros(1, dtype=jnp.float32)  # (1,)
+    terminated: Array = FALSE
+    truncated: Array = FALSE
+    legal_action_mask: Array = jnp.ones(6, dtype=jnp.bool_)
+    _rng_key: jax.random.KeyArray = PRNGKey(0)
+    _step_count: Array = jnp.int32(0)
     # --- MinAtar Seaquest specific ---
-    _oxygen: jnp.ndarray = MAX_OXYGEN
-    _diver_count: jnp.ndarray = ZERO
-    _sub_x: jnp.ndarray = jnp.int32(5)
-    _sub_y: jnp.ndarray = ZERO
-    _sub_or: jnp.ndarray = FALSE
-    _f_bullets: jnp.ndarray = -jnp.ones((5, 3), dtype=jnp.int32)
-    _e_bullets: jnp.ndarray = -jnp.ones(
+    _oxygen: Array = MAX_OXYGEN
+    _diver_count: Array = ZERO
+    _sub_x: Array = jnp.int32(5)
+    _sub_y: Array = ZERO
+    _sub_or: Array = FALSE
+    _f_bullets: Array = -jnp.ones((5, 3), dtype=jnp.int32)
+    _e_bullets: Array = -jnp.ones(
         (25, 3), dtype=jnp.int32
     )  # <= 1 per each sub
-    _e_fish: jnp.ndarray = -jnp.ones((25, 4), dtype=jnp.int32)  # <= 19
-    _e_subs: jnp.ndarray = -jnp.ones((25, 5), dtype=jnp.int32)  # <= 19
-    _divers: jnp.ndarray = -jnp.ones((5, 4), dtype=jnp.int32)  # <= 2
-    _e_spawn_speed: jnp.ndarray = INIT_SPAWN_SPEED
-    _e_spawn_timer: jnp.ndarray = INIT_SPAWN_SPEED
-    _d_spawn_timer: jnp.ndarray = DIVER_SPAWN_SPEED
-    _move_speed: jnp.ndarray = INIT_MOVE_INTERVAL
-    _ramp_index: jnp.ndarray = ZERO
-    _shot_timer: jnp.ndarray = ZERO
-    _surface: jnp.ndarray = TRUE
-    _terminal: jnp.ndarray = FALSE
-    _last_action: jnp.ndarray = ZERO
+    _e_fish: Array = -jnp.ones((25, 4), dtype=jnp.int32)  # <= 19
+    _e_subs: Array = -jnp.ones((25, 5), dtype=jnp.int32)  # <= 19
+    _divers: Array = -jnp.ones((5, 4), dtype=jnp.int32)  # <= 2
+    _e_spawn_speed: Array = INIT_SPAWN_SPEED
+    _e_spawn_timer: Array = INIT_SPAWN_SPEED
+    _d_spawn_timer: Array = DIVER_SPAWN_SPEED
+    _move_speed: Array = INIT_MOVE_INTERVAL
+    _ramp_index: Array = ZERO
+    _shot_timer: Array = ZERO
+    _surface: Array = TRUE
+    _terminal: Array = FALSE
+    _last_action: Array = ZERO
 
     @property
     def env_id(self) -> core.EnvId:
@@ -124,7 +125,7 @@ class MinAtarSeaquest(core.Env):
         )
         return _step(state, action, key, self.sticky_action_prob)  # type: ignore
 
-    def _observe(self, state: core.State, player_id: jnp.ndarray) -> jnp.ndarray:
+    def _observe(self, state: core.State, player_id: Array) -> Array:
         assert isinstance(state, State)
         return _observe(state)
 
@@ -143,7 +144,7 @@ class MinAtarSeaquest(core.Env):
 
 def _step(
     state: State,
-    action: jnp.ndarray,
+    action: Array,
     key,
     sticky_action_prob,
 ):
@@ -169,7 +170,7 @@ def _step(
 
 def _step_det(
     state: State,
-    action: jnp.ndarray,
+    action: Array,
     enemy_lr,
     is_sub,
     enemy_y,
@@ -744,7 +745,7 @@ def _spawn_diver(divers, diver_lr, diver_y):
     return divers
 
 
-def _observe(state: State) -> jnp.ndarray:
+def _observe(state: State) -> Array:
     obs = jnp.zeros((11, 11, 10), dtype=jnp.bool_)
     obs = obs.at[state._sub_y, state._sub_x, 0].set(TRUE)
     back_x = lax.cond(
