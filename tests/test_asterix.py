@@ -5,7 +5,7 @@ from minatar import Environment
 
 from pgx.minatar import asterix
 
-from .minatar_utils import *
+from tests.minatar_utils import *
 
 state_keys = {
     "player_x",
@@ -101,11 +101,11 @@ def test_minimal_action_set():
     assert env.num_actions == 5
     state = jax.jit(env.init)(jax.random.PRNGKey(0))
     assert state.legal_action_mask.shape == (5,)
-    state = jax.jit(env.step)(state, 0)
+    state = jax.jit(env.step)(state, 0, jax.random.PRNGKey(0))
     assert state.legal_action_mask.shape == (5,)
 
 
 def test_api():
     import pgx
     env = pgx.make("minatar-asterix")
-    pgx.v1_api_test(env, 10)
+    pgx.api_test(env, 10, True)

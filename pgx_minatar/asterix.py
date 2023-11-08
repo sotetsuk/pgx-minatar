@@ -11,7 +11,7 @@ from typing import Literal, Optional
 import jax
 from jax import numpy as jnp
 
-import pgx.v1 as v1
+import pgx.core as core
 from pgx._src.struct import dataclass
 
 ramp_interval: jnp.ndarray = jnp.array(100, dtype=jnp.int32)
@@ -30,14 +30,13 @@ TRUE = jnp.bool_(True)
 
 
 @dataclass
-class State(v1.State):
+class State(core.State):
     current_player: jnp.ndarray = jnp.int32(0)
     observation: jnp.ndarray = jnp.zeros((10, 10, 4), dtype=jnp.bool_)
     rewards: jnp.ndarray = jnp.zeros(1, dtype=jnp.float32)  # (1,)
     terminated: jnp.ndarray = FALSE
     truncated: jnp.ndarray = FALSE
     legal_action_mask: jnp.ndarray = jnp.ones(5, dtype=jnp.bool_)
-    _rng_key: jax.random.KeyArray = jax.random.PRNGKey(0)
     _step_count: jnp.ndarray = jnp.int32(0)
     # --- MinAtar Asterix specific ---
     _player_x: jnp.ndarray = jnp.array(5, dtype=jnp.int32)
@@ -54,7 +53,7 @@ class State(v1.State):
     _last_action: jnp.ndarray = jnp.array(0, dtype=jnp.int32)
 
     @property
-    def env_id(self) -> v1.EnvId:
+    def env_id(self) -> core.EnvId:
         return "minatar-asterix"
 
     def to_svg(
@@ -80,7 +79,7 @@ class State(v1.State):
         visualize_minatar(self, filename)
 
 
-class MinAtarAsterix(v1.Env):
+class MinAtarAsterix(core.Env):
     def __init__(
         self,
         *,
@@ -102,22 +101,21 @@ class MinAtarAsterix(v1.Env):
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         return state  # type: ignore
 
-    def _step(self, state: v1.State, action) -> State:
-        assert isinstance(state, State)
+    def _step(self, state: core.State, action, key) -> State:
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         action = jax.lax.select(
             self.use_minimal_action_set,
             self.minimal_action_set[action],
             action,
         )
-        return _step(state, action, sticky_action_prob=self.sticky_action_prob)  # type: ignore
+        return _step(state, action, self.sticky_action_prob, key)  # type: ignore
 
-    def _observe(self, state: v1.State, player_id: jnp.ndarray) -> jnp.ndarray:
+    def _observe(self, state: core.State, player_id: jnp.ndarray) -> jnp.ndarray:
         assert isinstance(state, State)
         return _observe(state)
 
     @property
-    def id(self) -> v1.EnvId:
+    def id(self) -> core.EnvId:
         return "minatar-asterix"
 
     @property
@@ -133,10 +131,10 @@ def _step(
     state: State,
     action: jnp.ndarray,
     sticky_action_prob: float,
+    key
 ):
     action = jnp.int32(action)
-    rng_key, rng0, rng1, rng2, rng3 = jax.random.split(state._rng_key, 5)
-    state = state.replace(_rng_key=rng_key)  # type: ignore
+    rng0, rng1, rng2, rng3 = jax.random.split(key, 4)
 
     # sticky action
     action = jax.lax.cond(
