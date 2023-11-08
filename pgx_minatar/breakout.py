@@ -11,7 +11,7 @@ from typing import Literal, Optional
 import jax
 from jax import numpy as jnp
 
-import pgx.v1 as v1
+import pgx.core as core
 from pgx._src.struct import dataclass
 
 FALSE = jnp.bool_(False)
@@ -25,14 +25,13 @@ NINE = jnp.array(9, dtype=jnp.int32)
 
 
 @dataclass
-class State(v1.State):
+class State(core.State):
     current_player: jnp.ndarray = jnp.int32(0)
     observation: jnp.ndarray = jnp.zeros((10, 10, 4), dtype=jnp.bool_)
     rewards: jnp.ndarray = jnp.zeros(1, dtype=jnp.float32)  # (1,)
     terminated: jnp.ndarray = FALSE
     truncated: jnp.ndarray = FALSE
     legal_action_mask: jnp.ndarray = jnp.ones(3, dtype=jnp.bool_)
-    _rng_key: jax.random.KeyArray = jax.random.PRNGKey(0)
     _step_count: jnp.ndarray = jnp.int32(0)
     # --- MinAtar Breakout specific ---
     _ball_y: jnp.ndarray = THREE
@@ -49,7 +48,7 @@ class State(v1.State):
     _last_action: jnp.ndarray = ZERO
 
     @property
-    def env_id(self) -> v1.EnvId:
+    def env_id(self) -> core.EnvId:
         return "minatar-breakout"
 
     def to_svg(
@@ -75,7 +74,7 @@ class State(v1.State):
         visualize_minatar(self, filename)
 
 
-class MinAtarBreakout(v1.Env):
+class MinAtarBreakout(core.Env):
     def __init__(
         self,
         *,
@@ -97,22 +96,21 @@ class MinAtarBreakout(v1.Env):
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         return state  # type: ignore
 
-    def _step(self, state: v1.State, action) -> State:
-        assert isinstance(state, State)
+    def _step(self, state: core.State, action, key) -> State:
         state = state.replace(legal_action_mask=self.legal_action_mask)  # type: ignore
         action = jax.lax.select(
             self.use_minimal_action_set,
             self.minimal_action_set[action],
             action,
         )
-        return _step(state, action, sticky_action_prob=self.sticky_action_prob)  # type: ignore
+        return _step(state, action, key, self.sticky_action_prob)  # type: ignore
 
-    def _observe(self, state: v1.State, player_id: jnp.ndarray) -> jnp.ndarray:
+    def _observe(self, state: core.State, player_id: jnp.ndarray) -> jnp.ndarray:
         assert isinstance(state, State)
         return _observe(state)
 
     @property
-    def id(self) -> v1.EnvId:
+    def id(self) -> core.EnvId:
         return "minatar-breakout"
 
     @property
@@ -127,13 +125,12 @@ class MinAtarBreakout(v1.Env):
 def _step(
     state: State,
     action,
+    key,
     sticky_action_prob,
 ):
     action = jnp.int32(action)
-    key, subkey = jax.random.split(state._rng_key)
-    state = state.replace(_rng_key=key)  # type: ignore
     action = jax.lax.cond(
-        jax.random.uniform(subkey) < sticky_action_prob,
+        jax.random.uniform(key) < sticky_action_prob,
         lambda: state._last_action,
         lambda: action,
     )
