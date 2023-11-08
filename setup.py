@@ -18,7 +18,7 @@ setup(
         "": ["LICENSE"]
     },
     include_package_data=True,
-    install_requires=["matplotlib"],
+    install_requires=[],
     classifiers=[
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",

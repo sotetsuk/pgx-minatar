@@ -1,3 +1,4 @@
+import sys
 import math
 
 import jax.numpy as jnp
@@ -34,8 +35,13 @@ def get_cmap(n_channels):
 
 def visualize_minatar(state, savefile=None):
     # Modified from https://github.com/kenjyoung/MinAtar
-    import matplotlib.colors as colors  # type: ignore
-    import matplotlib.pyplot as plt  # type: ignore
+    try:
+        import matplotlib.colors as colors  # type: ignore
+        import matplotlib.pyplot as plt  # type: ignore
+    except ImportError:
+        sys.stderr.write("MinAtar environment requires matplotlib for visualization. Please install matplotlib.")
+        sys.exit(1)
+
 
     obs = state.observation
     n_channels = obs.shape[-1]
