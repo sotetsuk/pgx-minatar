@@ -1,9 +1,7 @@
-import pickle
 import random
 import jax
-import jax.numpy as jnp
 from dataclasses import fields
-
+import numpy as np
 from minatar import Environment
 
 from pgx_minatar import seaquest
@@ -36,29 +34,17 @@ _step_det = jax.jit(seaquest._step_det)
 observe = jax.jit(seaquest._observe)
 
 
-def test_buggy_example():
-    env = seaquest.MinAtarSeaquest()
-
-    with open("prev_state.pkl", 'rb') as f:
-        s = pickle.load(f)
-    with open("expected_obs.pkl", 'rb') as f:
-        expected_obs = pickle.load(f)
-
-    s = jax.jit(env.step)(s, jnp.int32(5))
-    s.save_svg("next_pgx.svg")
-    print(s)
-    assert (s.observation == expected_obs).all()
-
-
 def test_step_det():
     env = Environment("seaquest", sticky_action_prob=0.0)
     num_actions = env.num_actions()
 
-    N = 100
+    N = 100000000000000000
     for _ in range(N):
         env.reset()
         done = False
+        cnt = 0
         while not done:
+            cnt += 1
             s = extract_state(env, state_keys)
             a = random.randrange(num_actions)
             r, done = env.act(a)
@@ -72,16 +58,61 @@ def test_step_det():
                 diver_lr,
                 diver_y
             )
-            assert jnp.allclose(
+            ok =jnp.allclose(
                 env.state(),
                 observe(s_next_pgx),
             )
+            # ok = cnt <= 5
+            if not ok:
+                import pickle
+                prev_s = prev.replace(
+                        observation=observe(prev)
+                        )
+                error_s = s_next_pgx.replace(
+                        observation=observe(s_next_pgx)
+                        )
+                print(a, enemy_lr, is_sub, enemy_y, diver_lr, diver_y)
+                with open("prev_state.pkl", "wb") as f:
+                    pickle.dump(prev_s, f)
+                with open("error_state.pkl", "wb") as f:
+                    pickle.dump(error_s, f)
+                with open("expected_obs.pkl", "wb") as f:
+                    pickle.dump(env.state(), f)
+                print("minatar terminated", done)
+                print("pgx terminated:", s_next_pgx.terminated)
+                error_s.save_svg("error_pgx.svg")
+                import matplotlib.colors as colors  # type: ignore
+                import matplotlib.pyplot as plt  # type: ignore
+                import seaborn as sns  # type: ignore
+                obs = env.state()
+                n_channels = obs.shape[-1]
+                cmap = sns.color_palette("cubehelix", n_channels)
+                cmap.insert(0, (0, 0, 0))
+                # cmap = sns.cubehelix_palette(n_channels)
+                # cmap.insert(0, (10, 10, 10))
+                cmap = colors.ListedColormap(cmap)
+                bounds = [i for i in range(n_channels + 2)]
+                norm = colors.BoundaryNorm(bounds, n_channels + 1)
+                numerical_state = (
+                    np.amax(
+                        obs * jnp.reshape(jnp.arange(n_channels) + 1, (1, 1, -1)), 2
+                    )
+                    + 0.5
+                )
+                plt.figure()
+                cmap = sns.color_palette("cubehelix", n_channels)
+                cmap.insert(0, (0, 0, 0))
+                cmap = colors.ListedColormap(cmap)
+                plt.imshow(numerical_state, cmap=cmap, norm=norm, interpolation="none")
+                plt.savefig("error_origin.svg")
+            assert ok
             # if not jnp.allclose(env.state(), observe(s_next_pgx)):
             #     for field in fields(s_next_pgx):
             #         print(str(field.name) + "\n" + str(getattr(s_next_pgx, field.name)) + "\n"  + str(getattr(minatar2pgx(extract_state(env, state_keys), seaquest.MinAtarSeaquestState), field.name)))
             #     assert False
             assert r == s_next_pgx.rewards[0]
             assert done == s_next_pgx.terminated
+            prev = s_next_pgx
 
 
 def test_init_det():
@@ -207,3 +238,4 @@ def test_api():
     import pgx
     env = pgx.make("minatar-seaquest")
     pgx.v1_api_test(env, 10)
+

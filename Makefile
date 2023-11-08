@@ -6,9 +6,9 @@ install-dev:
 	python3 -m pip install \
 		pytest==7.1.2 \
 		matplotlib \
+		seaborn \
 		ipython \
 		jax[cpu] \
-		dm-haiku
 
 clean:
 	rm -rf build
